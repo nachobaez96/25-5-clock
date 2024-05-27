@@ -5,17 +5,34 @@ const Clock = () => {
   const [sessionLength, setSessionLength] = useState(25)
   const [breakLength, setBreakLength] = useState(5)
   const [seconds, setSeconds] = useState(0)
+  const [isBreak, setIsBreak] = useState(false)
+  const [timerStarted, setTimerStarted] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
-    if (seconds > 0) {
-      const timer = setInterval(() => {
+    let timer
+    if (timerStarted && seconds > 0) {
+      timer = setInterval(() => {
         setSeconds(prevSeconds => prevSeconds - 1)
       }, 1000)
-  
-      return () => clearInterval(timer)
     }
-  }, [seconds])
- 
+    if (timerStarted && seconds === 0) {
+      clearInterval(timer);
+      if (isBreak) {
+        setSeconds(sessionLength);
+        setIsBreak(false);
+      } else {
+        setSeconds(breakLength);
+        setIsBreak(true);
+      }
+    }
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [seconds, isBreak, isPaused])
+
+
   const addSessionLength = () => {
     setSessionLength((prevSessionLength) => prevSessionLength + 1)
   }
@@ -32,6 +49,25 @@ const Clock = () => {
     setBreakLength((prevBreakLength) => prevBreakLength - 1)
   }
 
+  const startTimer = () => {
+    if (isPaused) {
+      setTimerStarted(true)
+      setIsPaused(false)
+    } else {
+      setTimerStarted(true)
+      if (isBreak) {
+        setSeconds(breakLength)
+      } else {
+        setSeconds(sessionLength)
+      }
+    }
+  }
+
+  const pauseTimer = () => {
+    setTimerStarted(false)
+    setIsPaused(true)
+  }
+
   return (
     <div className="clock">
       <h1>25 + 5 Clock</h1>
@@ -40,8 +76,8 @@ const Clock = () => {
         <p>{seconds}</p>
       </div>
       <div className="controls">
-        <button>
-          Pause or start
+        <button onClick={timerStarted ? pauseTimer : startTimer}>
+          {timerStarted ? "Pause" : "Start"}
         </button>
         <button>Reset</button>
       </div>

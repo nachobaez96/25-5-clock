@@ -9,6 +9,8 @@ const Clock = () => {
   const [timerStarted, setTimerStarted] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
 
+  const bell = new Audio('./assets/audio/bell.mp3')
+
   useEffect(() => {
     let timer
     if (timerStarted && seconds > 0) {
@@ -17,20 +19,21 @@ const Clock = () => {
       }, 1000)
     }
     if (timerStarted && seconds === 0) {
-      clearInterval(timer);
+      bell.play()
+      clearInterval(timer)
       if (isBreak) {
-        setSeconds(sessionLength);
-        setIsBreak(false);
+        setSeconds(sessionLength * 60)
+        setIsBreak(false)
       } else {
-        setSeconds(breakLength);
-        setIsBreak(true);
+        setSeconds(breakLength * 60)
+        setIsBreak(true)
       }
     }
 
     return () => {
       clearInterval(timer)
     }
-  }, [seconds, isBreak, isPaused])
+  }, [seconds, isBreak, isPaused, timerStarted])
 
 
   const addSessionLength = () => {
@@ -38,7 +41,7 @@ const Clock = () => {
   }
 
   const subtractSessionLength = () => {
-    setSessionLength((prevSessionLength) => prevSessionLength - 1)
+    sessionLength > 1 && setSessionLength((prevSessionLength) => prevSessionLength - 1)
   }
 
   const addBreakLength = () => {
@@ -46,7 +49,7 @@ const Clock = () => {
   }
 
   const subtractBreakLength = () => {
-    setBreakLength((prevBreakLength) => prevBreakLength - 1)
+    breakLength > 1 && setBreakLength((prevBreakLength) => prevBreakLength - 1)
   }
 
   const startTimer = () => {
@@ -56,9 +59,9 @@ const Clock = () => {
     } else {
       setTimerStarted(true)
       if (isBreak) {
-        setSeconds(breakLength)
+        setSeconds(breakLength * 60)
       } else {
-        setSeconds(sessionLength)
+        setSeconds(sessionLength * 60)
       }
     }
   }
@@ -68,18 +71,30 @@ const Clock = () => {
     setIsPaused(true)
   }
 
+  const resetTimer = () => {
+    setTimerStarted(false)
+    setIsBreak(false)
+    setSeconds(sessionLength * 60)
+  }
+
+  const formatTime = (time) => {
+    const minutesLeft = Math.floor(time / 60)
+    const secondsLeft = time % 60
+    return (`${minutesLeft < 10 ? '0' : ''}${minutesLeft}:${secondsLeft < 10 ? '0' : ''}${secondsLeft}`)
+  }
+
   return (
     <div className="clock">
       <h1>25 + 5 Clock</h1>
       <div className="timer">
-        <h2>Session or break</h2>
-        <p>{seconds}</p>
+        <h2>{isBreak ? "Break" : "Session"}</h2>
+        <p>{formatTime(seconds)}</p>
       </div>
       <div className="controls">
         <button onClick={timerStarted ? pauseTimer : startTimer}>
           {timerStarted ? "Pause" : "Start"}
         </button>
-        <button>Reset</button>
+        <button onClick={resetTimer}>Reset</button>
       </div>
       <div className="length-controls">
         <div>
